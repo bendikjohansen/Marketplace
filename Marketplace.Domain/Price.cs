@@ -2,6 +2,8 @@ namespace Marketplace.Domain;
 
 public record Price : Money
 {
+    internal Price(decimal amount, string currencyCode) : base(amount, currencyCode){}
+
     private Price(decimal amount, string currencyCode, ICurrencyLookup currencyLookup) : base(amount, currencyCode,
         currencyLookup)
     {

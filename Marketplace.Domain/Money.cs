@@ -35,7 +35,7 @@ public record Money
         CurrencyCode = currencyCode;
     }
 
-    private Money(decimal amount, string currencyCode)
+    protected Money(decimal amount, string currencyCode)
     {
         Amount = amount;
         CurrencyCode = currencyCode;

@@ -15,7 +15,7 @@ public class ClassifiedAdPublishSpec
     public void Can_publish_a_valid_ad()
     {
         _classifiedAd.SetTitle(ClassifiedAdTitle.FromString("Test ad"));
-        _classifiedAd.UpdateText(new ClassifiedAdText("Please buy my stuff"));
+        _classifiedAd.UpdateText(ClassifiedAdText.FromString("Please buy my stuff"));
         _classifiedAd.UpdatePrice(Price.FromDecimal(10, "EUR", new FakeCurrencyLookup()));
 
         _classifiedAd.RequestToPublish();
@@ -26,7 +26,7 @@ public class ClassifiedAdPublishSpec
     [Fact]
     public void Cannot_publish_without_a_title()
     {
-        _classifiedAd.UpdateText(new ClassifiedAdText("Please buy my stuff"));
+        _classifiedAd.UpdateText(ClassifiedAdText.FromString("Please buy my stuff"));
         _classifiedAd.UpdatePrice(Price.FromDecimal(10, "EUR", new FakeCurrencyLookup()));
 
         Assert.Throws<InvalidEntityStateException>(() => _classifiedAd.RequestToPublish());
@@ -45,7 +45,7 @@ public class ClassifiedAdPublishSpec
     public void Cannot_publish_without_a_price()
     {
         _classifiedAd.SetTitle(ClassifiedAdTitle.FromString("Test ad"));
-        _classifiedAd.UpdateText(new ClassifiedAdText("Please buy my stuff"));
+        _classifiedAd.UpdateText(ClassifiedAdText.FromString("Please buy my stuff"));
 
         Assert.Throws<InvalidEntityStateException>(() => _classifiedAd.RequestToPublish());
     }
@@ -54,7 +54,7 @@ public class ClassifiedAdPublishSpec
     public void Cannot_publish_with_zero_price()
     {
         _classifiedAd.SetTitle(ClassifiedAdTitle.FromString("Test ad"));
-        _classifiedAd.UpdateText(new ClassifiedAdText("Please buy my stuff"));
+        _classifiedAd.UpdateText(ClassifiedAdText.FromString("Please buy my stuff"));
         _classifiedAd.UpdatePrice(Price.FromDecimal(0, "EUR", new FakeCurrencyLookup()));
 
         Assert.Throws<InvalidEntityStateException>(() => _classifiedAd.RequestToPublish());
