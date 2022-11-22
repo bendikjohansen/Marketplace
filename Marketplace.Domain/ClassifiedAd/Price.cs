@@ -1,8 +1,12 @@
-namespace Marketplace.Domain;
+using Marketplace.Domain.Shared;
+
+namespace Marketplace.Domain.ClassifiedAd;
 
 public record Price : Money
 {
-    internal Price(decimal amount, string currencyCode) : base(amount, currencyCode){}
+    internal Price(decimal amount, string currencyCode) : base(amount, currencyCode)
+    {
+    }
 
     private Price(decimal amount, string currencyCode, ICurrencyLookup currencyLookup) : base(amount, currencyCode,
         currencyLookup)
@@ -11,6 +15,10 @@ public record Price : Money
         {
             throw new ArgumentException("Price cannot be negative", nameof(amount));
         }
+    }
+
+    protected Price()
+    {
     }
 
     public new static Price FromDecimal(decimal amount, string currency, ICurrencyLookup currencyLookup) =>

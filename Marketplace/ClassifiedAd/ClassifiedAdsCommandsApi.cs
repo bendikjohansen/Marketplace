@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
-using static Marketplace.Contracts.ClassifiedAds;
+using static Marketplace.ClassifiedAd.Contracts;
 
-namespace Marketplace.Api;
+namespace Marketplace.ClassifiedAd;
 
 [Route("/ad")]
-public class ClassifiedAdsCommandsApi : Controller
+public class ClassifiedAdsCommandsApi : ControllerBase
 {
     private readonly ClassifiedAdsApplicationService _applicationService;
 
@@ -41,9 +41,25 @@ public class ClassifiedAdsCommandsApi : Controller
         return Ok();
     }
 
+    [Route("picture")]
+    [HttpPost]
+    public async Task<IActionResult> AddPicture(V1.AddPicture request)
+    {
+        await _applicationService.Handle(request);
+        return Ok();
+    }
+
     [Route("publish")]
     [HttpPut]
     public async Task<IActionResult> Put(V1.RequestToPublish request)
+    {
+        await _applicationService.Handle(request);
+        return Ok();
+    }
+
+    [Route("approve")]
+    [HttpPut]
+    public async Task<IActionResult> Put(V1.ApprovePublish request)
     {
         await _applicationService.Handle(request);
         return Ok();

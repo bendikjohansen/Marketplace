@@ -1,6 +1,6 @@
-﻿namespace Marketplace.Contracts;
+﻿namespace Marketplace.ClassifiedAd;
 
-public static class ClassifiedAds
+public static class Contracts
 {
     public static class V1
     {
@@ -33,5 +33,13 @@ public static class ClassifiedAds
         {
             public Guid Id { get; init; }
         }
+
+        public class ApprovePublish
+        {
+            public Guid Id { get; init; }
+            public Guid UserId { get; init; }
+        }
+
+        public record AddPicture(Guid Id, Uri Url, int Width, int Height);
     }
 }

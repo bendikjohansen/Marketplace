@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace Marketplace.Domain;
+namespace Marketplace.Domain.Shared;
 
 public record Money
 {
@@ -41,8 +41,13 @@ public record Money
         CurrencyCode = currencyCode;
     }
 
-    public decimal Amount { get; }
-    public string CurrencyCode { get; }
+    // For persistence
+    protected Money()
+    {
+    }
+
+    public decimal Amount { get; private set; }
+    public string CurrencyCode { get; private set; }
 
     private Money Add(Money summand)
     {

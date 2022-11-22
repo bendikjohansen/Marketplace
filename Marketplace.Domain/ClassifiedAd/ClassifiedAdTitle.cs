@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace Marketplace.Domain;
+namespace Marketplace.Domain.ClassifiedAd;
 
 public record ClassifiedAdTitle
 {
@@ -23,9 +23,15 @@ public record ClassifiedAdTitle
         return new ClassifiedAdTitle(value);
     }
 
-    public string Value { get; }
+    public string Value { get; private set; }
 
     internal ClassifiedAdTitle(string value) => Value = value;
+
+    // For persistence
+    private ClassifiedAdTitle()
+    {
+    }
+
 
     private static void CheckValidity(string value)
     {

@@ -1,4 +1,4 @@
-using Marketplace.Domain;
+using Marketplace.Domain.Shared;
 
 namespace Marketplace.Tests;
 
