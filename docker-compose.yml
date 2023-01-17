@@ -2,11 +2,12 @@ version: '3.5'
 
 services:
 
-  ravendb:
-    container_name: marketplace-ch8-ravendb
-    image: ravendb/ravendb
+  eventstore:
+    container_name: marketplace-eventstore
+    image: ghcr.io/eventstore/eventstore:21.10.1-alpha-arm64v8
     ports:
-      - 8080:8080
+      - 2113:2113
+      - 1113:1113
     environment:
-      - RAVEN_Security_UnsecuredAccessAllowed=PublicNetwork
-      - RAVEN_ARGS="--Setup.Mode=None"
+      - EVENTSTORE_HTTP_PORT=2113
+      - EVENTSTORE_EXT_TCP_PORT=1113

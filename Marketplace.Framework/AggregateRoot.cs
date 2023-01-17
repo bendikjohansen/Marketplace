@@ -6,12 +6,22 @@ public abstract class AggregateRoot<TId> : IInternalEventHandler
     protected abstract void When(object @event);
     private readonly List<object> _changes;
     protected AggregateRoot() => _changes = new List<object>();
+    private int Version { get; set; }
 
     protected void Apply(object @event)
     {
         When(@event);
         EnsureValidState();
         _changes.Add(@event);
+    }
+
+    public void Load(IEnumerable<object> history)
+    {
+        foreach (var @event in history)
+        {
+            When(@event);
+            Version++;
+        }
     }
 
     public IEnumerable<object> GetChanges() => _changes.AsEnumerable();

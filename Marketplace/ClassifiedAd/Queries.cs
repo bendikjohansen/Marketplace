@@ -27,7 +27,7 @@ public static class ReadModels
         public decimal? Price { get; init; }
         public string? CurrencyCode { get; init; }
         public string? PhotoUrl { get; init; }
-    };
+    }
 }
 
 public static class QueryModels
@@ -107,7 +107,8 @@ public static class Queries
                 Title = x.Title.Value,
                 Price = x.Price.Amount,
                 Description = x.Text.Value,
-                SellersDisplayName = RavenQuery.Load<Domain.UserProfile.UserProfile>($"UserProfile/{x.OwnerId.Value}").DisplayName.Value
+                SellersDisplayName = RavenQuery.Load<Domain.UserProfile.UserProfile>($"UserProfile/{x.OwnerId.Value}")
+                    .DisplayName.Value
             })
             .SingleAsync();
 
