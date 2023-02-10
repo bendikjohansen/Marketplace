@@ -43,7 +43,7 @@ public class ClassifiedAdsCommandsApi : ControllerBase
 
     [Route("picture")]
     [HttpPost]
-    public async Task<IActionResult> AddPicture(V1.AddPicture request)
+    public async Task<IActionResult> Post(V1.AddPicture request)
     {
         await _applicationService.Handle(request);
         return Ok();

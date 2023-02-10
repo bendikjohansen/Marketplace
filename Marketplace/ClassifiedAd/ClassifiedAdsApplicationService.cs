@@ -5,18 +5,15 @@ using static Marketplace.ClassifiedAd.Contracts;
 
 namespace Marketplace.ClassifiedAd;
 
-public class ClassifiedAdsApplicationService
+public class ClassifiedAdsApplicationService : IApplicationService
 {
-    private readonly IClassifiedAdRepository _repository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAggregateStore _store;
     private readonly ICurrencyLookup _currencyLookup;
 
-    public ClassifiedAdsApplicationService(IClassifiedAdRepository repository, ICurrencyLookup currencyLookup,
-        IUnitOfWork unitOfWork)
+    public ClassifiedAdsApplicationService(IAggregateStore store, ICurrencyLookup currencyLookup)
     {
-        _repository = repository;
+        _store = store;
         _currencyLookup = currencyLookup;
-        _unitOfWork = unitOfWork;
     }
 
     public Task Handle(object command) => command switch
@@ -36,7 +33,7 @@ public class ClassifiedAdsApplicationService
 
     private async Task HandleCreate(V1.Create cmd)
     {
-        if (await _repository.Exists(new ClassifiedAdId(cmd.Id)))
+        if (await _store.Exists<Domain.ClassifiedAd.ClassifiedAd, ClassifiedAdId>(new ClassifiedAdId(cmd.Id)))
         {
             throw new InvalidOperationException($"Entity with id {cmd.Id} already exists");
         }
@@ -45,19 +42,9 @@ public class ClassifiedAdsApplicationService
             new ClassifiedAdId(cmd.Id),
             new UserId(cmd.OwnerId));
 
-        await _repository.Add(classifiedAd);
-        await _unitOfWork.Commit();
+        await _store.Save<Domain.ClassifiedAd.ClassifiedAd, ClassifiedAdId>(classifiedAd);
     }
 
-    private async Task HandleUpdate(Guid id, Action<Domain.ClassifiedAd.ClassifiedAd> operation)
-    {
-        var classifiedAd = await _repository.Load(new ClassifiedAdId(id));
-        if (classifiedAd == null)
-        {
-            throw new InvalidOperationException($"Entity with id {id} cannot be found");
-        }
-
-        operation(classifiedAd);
-        await _unitOfWork.Commit();
-    }
+    private Task HandleUpdate(Guid id, Action<Domain.ClassifiedAd.ClassifiedAd> update)
+        => this.HandleUpdate(_store, new ClassifiedAdId(id), update);
 }

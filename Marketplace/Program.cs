@@ -1,48 +1,41 @@
+using EventStore.Client;
+using Marketplace;
 using Marketplace.ClassifiedAd;
-using Marketplace.Domain.ClassifiedAd;
 using Marketplace.Domain.Shared;
-using Marketplace.Domain.UserProfile;
 using Marketplace.Framework;
 using Marketplace.Infrastructure;
+using Marketplace.Projections;
 using Marketplace.UserProfile;
-using Raven.Client.Documents;
-using Raven.Client.Documents.Conventions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var store = new DocumentStore
-{
-    Urls = new[] {"http://localhost:8080"},
-    Database = "Marketplace",
-    Conventions = new DocumentConventions
-    {
-        FindIdentityProperty = m => m.Name == "_databaseId"
-    }
-};
-store.Initialize();
-
+var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+var client = new EventStoreClient(EventStoreClientSettings.Create(config.GetConnectionString("EventStore")));
+var classifiedAdDetails = new List<ReadModels.ClassifiedAdDetails>();
+var userDetails = new List<ReadModels.UserDetails>();
 builder.Services
     .AddHttpClient()
-    .AddScoped(_ => store.OpenAsyncSession())
-    .AddScoped<IUnitOfWork, RavenDbUnitOfWork>()
-    .AddScoped<IClassifiedAdRepository, ClassifiedAdRepository>()
-    .AddScoped<IUserProfileRepository, UserProfileRepository>()
+    .AddSingleton(client)
+    .AddSingleton<Func<Guid, string?>>(_ => id => userDetails.FirstOrDefault(user => user.UserId == id)?.DisplayName)
+    .AddSingleton<IProjection, ClassifiedAdDetailsProjection>()
+    .AddSingleton<IProjection, UserDetailsProjection>()
+    .AddSingleton<ProjectionManager>()
+    .AddSingleton<IList<ReadModels.ClassifiedAdDetails>>(classifiedAdDetails)
+    .AddSingleton<IList<ReadModels.UserDetails>>(userDetails)
+    .AddSingleton<IAggregateStore, EsAggregateStore>()
     .AddScoped<UserProfileApplicationService>()
     .AddSingleton<ICurrencyLookup, CurrencyLookup>()
     .AddScoped<ClassifiedAdsApplicationService>()
     .AddScoped<PurgomalumClient>()
-    .AddScoped<CheckTextForProfanity>(s => s.GetRequiredService<PurgomalumClient>().CheckForProfanity);
+    .AddScoped<CheckTextForProfanity>(s => s.GetRequiredService<PurgomalumClient>().CheckForProfanity)
+    .AddHostedService<EventStoreService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -50,9 +43,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

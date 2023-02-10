@@ -67,10 +67,10 @@ public class ClassifiedAd : AggregateRoot<ClassifiedAdId>
         picture.Resize(newSize);
     }
 
-    public void RequestToPublish() => Apply(new Events.ClassifiedAdSentForReview {Id = Id});
+    public void RequestToPublish() => Apply(new Events.ClassifiedAdSentForReview { Id = Id });
 
     public void Publish(UserId moderatorId) =>
-        Apply(new Events.ClassifiedAdPublished {Id = Id, ModeratorId = moderatorId});
+        Apply(new Events.ClassifiedAdPublished { Id = Id, ModeratorId = moderatorId });
 
     protected override void When(object @event)
     {
@@ -125,6 +125,11 @@ public class ClassifiedAd : AggregateRoot<ClassifiedAdId>
         {
             throw new DomainExceptions.InvalidEntityState(this, $"Post-checks failed in state {State}");
         }
+    }
+
+    public ClassifiedAd()
+    {
+        Pictures = new List<Picture>();
     }
 
     private Picture? FirstPicture => Pictures.MinBy(x => x.Order);
