@@ -39,4 +39,7 @@ public class UserProfile : AggregateRoot<UserId>
     protected override void EnsureValidState()
     {
     }
+
+    // Satisfy the serialization requirements
+    public UserProfile() {}
 }

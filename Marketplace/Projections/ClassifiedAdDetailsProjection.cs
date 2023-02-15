@@ -1,65 +1,37 @@
 ﻿using Marketplace.Domain.ClassifiedAd;
+using Raven.Client.Documents.Session;
 
 namespace Marketplace.Projections;
 
-public class ClassifiedAdDetailsProjection : IProjection
+public class ClassifiedAdDetailsProjection : RavenDbProjection<ReadModels.ClassifiedAdDetails>
 {
-    private readonly IList<ReadModels.ClassifiedAdDetails> _items;
-    private readonly Func<Guid, string> _getUserDisplayName;
+    private readonly Func<Guid, Task<string>> _getUserDisplayName;
 
-    public ClassifiedAdDetailsProjection(IList<ReadModels.ClassifiedAdDetails> items,
-        Func<Guid, string> getUserDisplayName)
+    public ClassifiedAdDetailsProjection(Func<IAsyncDocumentSession> getSession,
+        Func<Guid, Task<string>> getUserDisplayName) : base(getSession)
     {
-        _items = items;
         _getUserDisplayName = getUserDisplayName;
     }
 
-    public Task Project(object @event)
-    {
-        switch (@event)
+    public override Task Project(object @event)
+        => @event switch
         {
-            case Events.ClassifiedAdCreated e:
-                _items.Add(new ReadModels.ClassifiedAdDetails
+            Events.ClassifiedAdCreated e =>
+                Create(async () => new ReadModels.ClassifiedAdDetails
                 {
                     ClassifiedAdId = e.Id,
                     SellerId = e.OwnerId,
-                    SellersDisplayName = _getUserDisplayName(e.OwnerId)
-                });
-                break;
-            case Events.ClassifiedAdTitleChanged e:
-                UpdateItem(e.Id, ad => { ad.Title = e.Title; });
-                break;
-            case Events.ClassifiedAdPriceUpdated e:
-                UpdateItem(e.Id, ad =>
-                {
-                    ad.Price = e.Price;
-                    ad.CurrencyCode = e.CurrencyCode;
-                });
-                break;
-            case Events.ClassifiedAdTextUpdated e:
-                UpdateItem(e.Id, ad => { ad.Description = e.AdText; });
-                break;
-            case Domain.UserProfile.Events.UserDisplayNameUpdated e:
-                UpdateMultipleItems(x => x.SellerId == e.UserId,
-                    x => x.SellersDisplayName = e.DisplayName);
-                break;
-        }
-
-        return Task.CompletedTask;
-    }
-
-    private void UpdateItem(Guid id,
-        Action<ReadModels.ClassifiedAdDetails> update)
-    {
-        var item = _items.FirstOrDefault(x => x.ClassifiedAdId == id);
-        if (item == null) return;
-        update(item);
-    }
-
-    private void UpdateMultipleItems(
-        Func<ReadModels.ClassifiedAdDetails, bool> query,
-        Action<ReadModels.ClassifiedAdDetails> update)
-    {
-        foreach (var item in _items.Where(query)) update(item);
-    }
+                    SellersDisplayName = await _getUserDisplayName(e.OwnerId)
+                }),
+            Events.ClassifiedAdTitleChanged e => UpdateOne(e.Id, ad => { ad.Title = e.Title; }),
+            Events.ClassifiedAdPriceUpdated e => UpdateOne(e.Id, ad =>
+            {
+                ad.Price = e.Price;
+                ad.CurrencyCode = e.CurrencyCode;
+            }),
+            Events.ClassifiedAdTextUpdated e => UpdateOne(e.Id, ad => { ad.Description = e.AdText; }),
+            Domain.UserProfile.Events.UserDisplayNameUpdated e => UpdateWhere(x => x.SellerId == e.UserId,
+                x => x.SellersDisplayName = e.DisplayName),
+            _ => Task.CompletedTask
+        };
 }

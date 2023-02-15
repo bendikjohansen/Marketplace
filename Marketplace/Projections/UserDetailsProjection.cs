@@ -1,36 +1,28 @@
 ﻿using Marketplace.Domain.UserProfile;
+using Raven.Client.Documents.Session;
 
 namespace Marketplace.Projections;
 
-public class UserDetailsProjection : IProjection
+public class UserDetailsProjection : RavenDbProjection<ReadModels.UserDetails>
 {
-    private readonly IList<ReadModels.UserDetails> _items;
-
-    public UserDetailsProjection(IList<ReadModels.UserDetails> items) => _items = items;
-
-    public Task Project(object @event)
+    public UserDetailsProjection(Func<IAsyncDocumentSession> getSession) : base(getSession)
     {
-        switch (@event)
+    }
+
+    public override Task Project(object @event) =>
+        @event switch
         {
-            case Events.UserRegistered e:
-                _items.Add(new ReadModels.UserDetails
-                {
-                    UserId = e.UserId,
-                    DisplayName = e.DisplayName
-                });
-                break;
-            case Events.UserDisplayNameUpdated e:
-                UpdateItem(e.UserId, user => user.DisplayName = e.DisplayName);
-                break;
-        }
-        return Task.CompletedTask;
-    }
-
-    private void UpdateItem(Guid id,
-        Action<ReadModels.UserDetails> update)
-    {
-        var item = _items.FirstOrDefault(x => x.UserId == id);
-        if (item == null) return;
-        update(item);
-    }
+            Events.UserRegistered e =>
+                Create(
+                    () => Task.FromResult(
+                        new ReadModels.UserDetails
+                        {
+                            UserId = e.UserId.ToString(),
+                            DisplayName = e.DisplayName
+                        }
+                    )
+                ),
+            Events.UserDisplayNameUpdated e => UpdateOne(e.UserId, user => user.DisplayName = e.DisplayName),
+            _ => Task.CompletedTask
+        };
 }
